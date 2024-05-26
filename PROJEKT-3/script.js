@@ -1,4 +1,4 @@
-const cells = document.querySelectorAll("div.square");
+const squares = document.querySelectorAll("div.square");
 let currentPlayer = "O";
 const messageElement = document.getElementById("message");
 
@@ -17,38 +17,66 @@ function checkWin() {
   return winPatterns.find((pattern) => {
     const [a, b, c] = pattern;
     return (
-      cells[a].innerHTML &&
-      cells[a].innerHTML === cells[b].innerHTML &&
-      cells[a].innerHTML === cells[c].innerHTML
+      squares[a].innerHTML &&
+      squares[a].innerHTML === squares[b].innerHTML &&
+      squares[a].innerHTML === squares[c].innerHTML
     );
   });
 }
 
-for (let cell of cells) {
-  cell.addEventListener("click", (event) => {
-    if (cell.innerHTML) return;
-    cell.innerHTML = currentPlayer;
-    cell.classList.add(currentPlayer.toLowerCase());
+function handleClick(event) {
+  const square = event.target;
+  if (square.innerHTML) return;
+  square.innerHTML = currentPlayer;
+  square.classList.add(currentPlayer.toLowerCase());
 
-    const winPattern = checkWin();
-    if (winPattern) {
-      messageElement.innerHTML = `Wygrywa ${currentPlayer}!`;
-      drawWinLine(winPattern);
-      return;
-    }
+  if (checkWin()) {
+    messageElement.innerHTML = `Wygrywa ${currentPlayer}!`;
+    disableCells();
+    return;
+  }
 
-    currentPlayer = currentPlayer === "O" ? "X" : "O";
-  });
+  currentPlayer = currentPlayer === "O" ? "X" : "O";
+  if (currentPlayer === "X") {
+    makeAIMove();
+  }
 }
 
-document.getElementById("reload").addEventListener("click", resetBoard);
+function makeAIMove() {
+  const emptySquares = Array.from(squares).filter((square) => !square.innerHTML);
+  if (emptySquares.length === 0) return;
+
+  const randomSquare = emptySquares[Math.floor(Math.random() * emptySquares.length)];
+  randomSquare.innerHTML = currentPlayer;
+  randomSquare.classList.add(currentPlayer.toLowerCase());
+
+  if (checkWin()) {
+    messageElement.innerHTML = `Wygrywa ${currentPlayer}!`;
+    disableCells();
+    return;
+  }
+
+  currentPlayer = "O";
+}
+
+function disableCells() {
+  for (let square of squares) {
+    square.removeEventListener("click", handleClick);
+  }
+}
 
 function resetBoard() {
-  for (let cell of cells) {
-    cell.innerHTML = "";
-    cell.classList.remove("X", "O");
+  for (let square of squares) {
+    square.innerHTML = "";
+    square.classList.remove("x", "o");
+    square.addEventListener("click", handleClick);
   }
   currentPlayer = "O";
   messageElement.innerHTML = "";
-  winLine.style.width = "0";
 }
+
+for (let square of squares) {
+  square.addEventListener("click", handleClick);
+}
+
+document.getElementById("reload").addEventListener("click", resetBoard);
